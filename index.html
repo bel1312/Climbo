@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Match Dash</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>Color Match Dash</h1>
+            <div class="stats">
+                <div class="score">Score: <span id="score">0</span></div>
+                <div class="level">Level: <span id="level">1</span></div>
+                <div class="lives">Lives: <span id="lives">3</span></div>
+            </div>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <div class="falling-balls-container" id="fallingBallsContainer"></div>
+            
+            <div class="player-area">
+                <div class="player" id="player"></div>
+            </div>
+            
+            <div class="catch-zones">
+                <div class="catch-zone red" data-color="red"></div>
+                <div class="catch-zone blue" data-color="blue"></div>
+                <div class="catch-zone green" data-color="green"></div>
+                <div class="catch-zone yellow" data-color="yellow"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" data-direction="left">←</button>
+            <button class="control-btn" data-direction="right">→</button>
+        </div>
+        
+        <div class="game-over-screen" id="gameOverScreen">
+            <div class="game-over-content">
+                <h2>Game Over!</h2>
+                <p>Final Score: <span id="finalScore">0</span></p>
+                <p>Level Reached: <span id="finalLevel">1</span></p>
+                <button id="restartBtn">Play Again</button>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <p>Use arrow keys or buttons to move your character</p>
+            <p>Catch falling balls in matching colored zones!</p>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
