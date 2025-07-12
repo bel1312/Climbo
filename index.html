@@ -3,52 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Color Match Dash</title>
+    <title>Mountain Climber - Reach the Summit!</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="game-container">
-        <div class="header">
-            <h1>Color Match Dash</h1>
-            <div class="stats">
+        <div class="sky-background"></div>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="ui-overlay">
+            <div class="score-panel">
                 <div class="score">Score: <span id="score">0</span></div>
-                <div class="level">Level: <span id="level">1</span></div>
+                <div class="height">Height: <span id="height">0</span>m</div>
                 <div class="lives">Lives: <span id="lives">3</span></div>
-            </div>
-        </div>
-        
-        <div class="game-area" id="gameArea">
-            <div class="falling-balls-container" id="fallingBallsContainer"></div>
-            
-            <div class="player-area">
-                <div class="player" id="player"></div>
+                <div class="combo">Combo: <span id="combo">0</span></div>
             </div>
             
-            <div class="catch-zones">
-                <div class="catch-zone red" data-color="red"></div>
-                <div class="catch-zone blue" data-color="blue"></div>
-                <div class="catch-zone green" data-color="green"></div>
-                <div class="catch-zone yellow" data-color="yellow"></div>
-            </div>
-        </div>
-        
-        <div class="controls">
-            <button class="control-btn" data-direction="left">←</button>
-            <button class="control-btn" data-direction="right">→</button>
-        </div>
-        
-        <div class="game-over-screen" id="gameOverScreen">
-            <div class="game-over-content">
+            <div class="game-over hidden" id="gameOver">
                 <h2>Game Over!</h2>
                 <p>Final Score: <span id="finalScore">0</span></p>
-                <p>Level Reached: <span id="finalLevel">1</span></p>
-                <button id="restartBtn">Play Again</button>
+                <p>Height Reached: <span id="finalHeight">0</span>m</p>
+                <button id="restartBtn" class="btn">Try Again</button>
             </div>
-        </div>
-        
-        <div class="instructions">
-            <p>Use arrow keys or buttons to move your character</p>
-            <p>Catch falling balls in matching colored zones!</p>
+            
+            <div class="start-screen" id="startScreen">
+                <h1>🏔️ Mountain Climber</h1>
+                <p>Use ARROW KEYS, WASD, or SPACEBAR to climb</p>
+                <p>🎯 Double jump in air • 🏀 Bounce on pink platforms</p>
+                <p>⚡ Collect power-ups • 🔥 Build combos for high scores!</p>
+                <button id="startBtn" class="btn">Start Climbing</button>
+            </div>
+            
+            <div class="controls">
+                <p>⬅️➡️ Move • ⬆️/SPACE Jump • ⬇️ Fast Fall • 💫 Double Jump Available</p>
+            </div>
         </div>
     </div>
     
