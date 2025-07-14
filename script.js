@@ -4,6 +4,7 @@ class ClimbingGame {
     this.ctx = this.canvas.getContext("2d");
     this.gameStarted = false;
     this.gameOver = false;
+    this.gamePaused = false;
 
     // Game state
     this.score = 0;
@@ -15,6 +16,10 @@ class ClimbingGame {
     this.maxCombo = 0;
     this.powerUpActive = false;
     this.powerUpTimer = 0;
+    this.bestScore = parseInt(localStorage.getItem('bestScore') || '0');
+    this.bestHeight = parseInt(localStorage.getItem('bestHeight') || '0');
+    this.achievements = JSON.parse(localStorage.getItem('achievements') || '[]');
+    this.soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
 
     // Player object with improved stats - start on ground
     this.player = {
@@ -41,6 +46,8 @@ class ClimbingGame {
     this.powerUps = [];
     this.particles = [];
     this.clouds = [];
+    this.weatherParticles = [];
+    this.weather = 'clear'; // 'clear', 'snow', 'rain'
 
     // Controls
     this.keys = {};
@@ -74,6 +81,13 @@ class ClimbingGame {
       // Track jump button press for reliable jumping
       if (["ArrowUp", "KeyW", "Space"].includes(e.code) && !wasPressed) {
         this.jumpPressed = true;
+      }
+      
+      // Pause game with Escape or P key
+      if (e.code === "Escape" || e.code === "KeyP") {
+        if (this.gameStarted && !this.gameOver) {
+          this.gamePaused = !this.gamePaused;
+        }
       }
 
       // Only prevent default for game keys
@@ -348,6 +362,16 @@ class ClimbingGame {
         const heightGained = newHeight - this.height;
         this.height = newHeight;
         this.score += heightGained * (this.combo + 1); // Combo multiplier
+        this.checkAchievements();
+        
+        // Change weather based on height
+        if (this.height > 500 && this.weather === 'clear') {
+          this.weather = 'snow';
+          this.generateWeatherParticles();
+        } else if (this.height > 200 && this.weather === 'clear') {
+          this.weather = 'rain';
+          this.generateWeatherParticles();
+        }
       }
     }
 
@@ -409,6 +433,20 @@ class ClimbingGame {
       if (cloud.x > this.canvas.width + cloud.size) {
         cloud.x = -cloud.size;
         cloud.y = Math.random() * this.canvas.height * 3;
+      }
+    });
+    
+    // Update weather particles
+    this.weatherParticles.forEach((particle) => {
+      particle.x += particle.velocityX;
+      particle.y += particle.velocityY;
+      
+      // Wrap around screen
+      if (particle.x < 0) particle.x = this.canvas.width;
+      if (particle.x > this.canvas.width) particle.x = 0;
+      if (particle.y > this.cameraY + this.canvas.height) {
+        particle.y = this.cameraY - 50;
+        particle.x = Math.random() * this.canvas.width;
       }
     });
   }
@@ -682,6 +720,9 @@ class ClimbingGame {
 
     // Draw particles
     this.drawParticles();
+    
+    // Draw weather effects
+    this.drawWeather();
 
     // Restore context
     this.ctx.restore();
@@ -951,6 +992,29 @@ class ClimbingGame {
     });
     this.ctx.globalAlpha = 1;
   }
+  
+  drawWeather() {
+    if (this.weather === 'clear') return;
+    
+    this.weatherParticles.forEach((particle) => {
+      this.ctx.globalAlpha = particle.opacity;
+      
+      if (this.weather === 'snow') {
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.beginPath();
+        this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        this.ctx.fill();
+      } else if (this.weather === 'rain') {
+        this.ctx.strokeStyle = '#4682B4';
+        this.ctx.lineWidth = particle.size;
+        this.ctx.beginPath();
+        this.ctx.moveTo(particle.x, particle.y);
+        this.ctx.lineTo(particle.x + particle.velocityX, particle.y + 8);
+        this.ctx.stroke();
+      }
+    });
+    this.ctx.globalAlpha = 1;
+  }
 
   updateUI() {
     document.getElementById("score").textContent = Math.ceil(this.score);
@@ -974,13 +1038,89 @@ class ClimbingGame {
 
   endGame() {
     this.gameOver = true;
+    
+    // Update best scores
+    if (this.score > this.bestScore) {
+      this.bestScore = Math.ceil(this.score);
+      localStorage.setItem('bestScore', this.bestScore.toString());
+    }
+    if (this.height > this.bestHeight) {
+      this.bestHeight = this.height;
+      localStorage.setItem('bestHeight', this.bestHeight.toString());
+    }
+    
     document.getElementById("finalScore").textContent = Math.ceil(this.score);
     document.getElementById("finalHeight").textContent = this.height;
+    document.getElementById("bestScore").textContent = this.bestScore;
+    document.getElementById("bestHeight").textContent = this.bestHeight;
     document.getElementById("gameOver").classList.remove("hidden");
+  }
+  
+  checkAchievements() {
+    const newAchievements = [];
+    
+    if (this.height >= 100 && !this.achievements.includes('height_100')) {
+      newAchievements.push('height_100');
+      this.showAchievement('🏔️ Mountain Explorer', 'Reached 100m height!');
+    }
+    
+    if (this.height >= 500 && !this.achievements.includes('height_500')) {
+      newAchievements.push('height_500');
+      this.showAchievement('⛰️ Peak Climber', 'Reached 500m height!');
+    }
+    
+    if (this.combo >= 10 && !this.achievements.includes('combo_10')) {
+      newAchievements.push('combo_10');
+      this.showAchievement('🔥 Combo Master', 'Achieved 10x combo!');
+    }
+    
+    if (this.score >= 1000 && !this.achievements.includes('score_1000')) {
+      newAchievements.push('score_1000');
+      this.showAchievement('⭐ Score Champion', 'Reached 1000 points!');
+    }
+    
+    if (newAchievements.length > 0) {
+      this.achievements.push(...newAchievements);
+      localStorage.setItem('achievements', JSON.stringify(this.achievements));
+    }
+  }
+  
+  showAchievement(title, description) {
+    // Create achievement notification
+    const notification = document.createElement('div');
+    notification.className = 'achievement-popup';
+    notification.innerHTML = `
+      <div class="achievement-content">
+        <h3>${title}</h3>
+        <p>${description}</p>
+      </div>
+    `;
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
+  }
+  
+  generateWeatherParticles() {
+    this.weatherParticles = [];
+    const particleCount = this.weather === 'snow' ? 50 : 30;
+    
+    for (let i = 0; i < particleCount; i++) {
+      this.weatherParticles.push({
+        x: Math.random() * this.canvas.width,
+        y: Math.random() * this.canvas.height - this.cameraY,
+        velocityX: this.weather === 'rain' ? (Math.random() - 0.5) * 2 : (Math.random() - 0.5) * 0.5,
+        velocityY: this.weather === 'rain' ? Math.random() * 8 + 2 : Math.random() * 2 + 0.5,
+        size: this.weather === 'snow' ? Math.random() * 3 + 1 : Math.random() * 2 + 1,
+        opacity: Math.random() * 0.8 + 0.2
+      });
+    }
   }
 
   gameLoop() {
-    if (this.gameStarted && !this.gameOver) {
+    if (this.gameStarted && !this.gameOver && !this.gamePaused) {
       this.handleInput();
       this.updatePlayer();
       this.updateGameObjects();
@@ -989,7 +1129,26 @@ class ClimbingGame {
     }
 
     this.render();
+    
+    // Draw pause screen if paused
+    if (this.gamePaused) {
+      this.drawPauseScreen();
+    }
+    
     requestAnimationFrame(() => this.gameLoop());
+  }
+  
+  drawPauseScreen() {
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    
+    this.ctx.fillStyle = 'white';
+    this.ctx.font = '48px Arial';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('PAUSED', this.canvas.width / 2, this.canvas.height / 2);
+    
+    this.ctx.font = '24px Arial';
+    this.ctx.fillText('Press ESC or P to resume', this.canvas.width / 2, this.canvas.height / 2 + 50);
   }
 }
 

@@ -203,3 +203,49 @@ body {
         font-size: 16px;
     }
 }
+
+/* Achievement notification styles */
+.achievement-popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #333;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 1000;
+    animation: slideInAchievement 0.5s ease-out, fadeOutAchievement 0.5s ease-in 2.5s;
+    max-width: 300px;
+}
+
+.achievement-content h3 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.achievement-content p {
+    margin: 0;
+    font-size: 14px;
+}
+
+@keyframes slideInAchievement {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOutAchievement {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
